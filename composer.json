@@ -1,0 +1,11 @@
+{
+    "require": {
+        "psr/cache": "^1.0",
+        "phpunit/phpunit": "^9.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Peeperklip\\": "src"
+        }
+    }
+}
