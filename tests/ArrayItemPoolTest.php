@@ -1,36 +1,39 @@
 <?php
 
 use Peeperklip\CacheItem;
-use Peeperklip\CacheItemPool;
+use Peeperklip\ArrayItemPool;
+use Peeperklip\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 class CacheItemPoolTest extends TestCase
 {
     private const NON_EXISTENT_KEY = 'thiskeydoesnotexist';
     private const THIS_KEY_EXISTS = 'iexist';
-
-    public function testGetItemsWillThrowAnExceptionIfTheRequestedKeyIsNotFound(): void
-    {
-        $sut = new CacheItemPool();
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('This key was not found');
-
-        $sut->getItem(self::NON_EXISTENT_KEY);
-    }
+    private const KEY_FOR_DEFERRED_ITEM = 'my_deferred';
+    private const DEFAULT_TTL = 10;
 
     public function testGetItemsWillThrowAnExceptionIfTheRequestedKeyIsAnEmptyValue(): void
     {
-        $sut = new CacheItemPool();
-        $this->expectException(\InvalidArgumentException::class);
+        $sut = new ArrayItemPool();
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Key should not contain empty values');
 
         $sut->getItem(null);
     }
 
+    public function testGetItemsWillThrowAnExceptionIfTheRequestedItemIsNotStoredInCache(): void
+    {
+        $sut = new ArrayItemPool();
+        $ci = $sut->getItem(self::NON_EXISTENT_KEY);
+
+        self::assertNull($ci->get());
+        self::assertFalse($ci->isHit());
+    }
+
     public function testGetItemsWillThrowAnExceptionIfTheRequestedKeyIsNotAScalar(): void
     {
-        $sut = new CacheItemPool();
-        $this->expectException(\InvalidArgumentException::class);
+        $sut = new ArrayItemPool();
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Keys should be scalar');
 
         $sut->getItem(true);
@@ -38,7 +41,7 @@ class CacheItemPoolTest extends TestCase
 
     public function testHasItemWillReturnSomething(): void
     {
-        $sut = new CacheItemPool();
+        $sut = new ArrayItemPool();
 
         $ci = new CacheItem(self::THIS_KEY_EXISTS);
         $sut->save($ci);
@@ -48,7 +51,7 @@ class CacheItemPoolTest extends TestCase
 
     public function testGetItemsReturnsEverythingThatIsRequested(): void
     {
-        $sut = new CacheItemPool();
+        $sut = new ArrayItemPool();
 
         $ci0 = new CacheItem(self::THIS_KEY_EXISTS . '_0');
         $ci1 = new CacheItem(self::THIS_KEY_EXISTS . '_1');
@@ -71,33 +74,50 @@ class CacheItemPoolTest extends TestCase
         self::assertContainsOnlyInstancesOf(CacheItem::class, $resultSet);
     }
 
-    public function testGetItemFirstReturnsTheRequestedObjectThenThrowsExceptionAfterItsRemovedFromCache(): void
+    public function testGetItemFirstReturnsTheRequestedObjectFromCacheThenReturnsAMissedItemAfterItsRemovedFromCache(): void
     {
-        $sut = new CacheItemPool();
+        $sut = new ArrayItemPool();
 
         $ci = new CacheItem(self::THIS_KEY_EXISTS);
-
+        $ci->set('im being cached');
+        $ci->expiresAfter(self::DEFAULT_TTL);
         $sut->save($ci);
+
+        self::assertTrue($ci->isHit());
+        self::assertSame(self::THIS_KEY_EXISTS, $ci->getKey());
+        self::assertSame('im being cached', $ci->get());
+
+        $sut->getItem(self::THIS_KEY_EXISTS);
+        $sut->deleteItem(self::THIS_KEY_EXISTS);
 
         $ci = $sut->getItem(self::THIS_KEY_EXISTS);
 
-        $sut->deleteItem(self::THIS_KEY_EXISTS);
-
-        $sut->getItem(self::THIS_KEY_EXISTS);
+        self::assertFalse($ci->isHit());
+        self::assertNull($ci->get());
+        self::assertSame(self::THIS_KEY_EXISTS, $ci->getKey());
     }
 
-    //saveDeferred
-    public function testSaveDeffered()
+    public function testSaveDefferedReturnsWillNotReadFromCacheIfItsNotCommittedYetButIWillReadFromCacheAfterCommit()
     {
-        $sut = new CacheItemPool();
+        $sut = new ArrayItemPool();
 
-        $ci = new CacheItem('my_deferred');
+        $ci = new CacheItem(self::KEY_FOR_DEFERRED_ITEM);
         $ci->set(1234);
         $ci->expiresAfter(1000);
 
         $sut->saveDeferred($ci);
 
+        $ci = $sut->getItem(self::KEY_FOR_DEFERRED_ITEM);
+
         self::assertNull($ci->get());
         self::assertFalse($ci->isHit());
+
+        $sut->commit();
+
+        $ci = $sut->getItem(self::KEY_FOR_DEFERRED_ITEM);
+
+        self::assertSame(1234, $ci->get());
+        self::assertTrue($ci->isHit());
     }
+    /** @TODO testing the TTL in more detail */
 }

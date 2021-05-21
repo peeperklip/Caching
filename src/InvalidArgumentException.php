@@ -2,7 +2,7 @@
 
 namespace Peeperklip;
 
-class InvalidArgumentException implements \Psr\Cache\InvalidArgumentException
+class InvalidArgumentException extends \InvalidArgumentException implements \Psr\Cache\InvalidArgumentException
 {
 
 }

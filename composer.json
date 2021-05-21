@@ -1,7 +1,8 @@
 {
     "require": {
         "psr/cache": "^1.0",
-        "phpunit/phpunit": "^9.5"
+        "phpunit/phpunit": "^9.5",
+        "ext-redis": "*"
     },
     "autoload": {
         "psr-4": {

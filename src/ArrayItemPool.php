@@ -5,7 +5,7 @@ namespace Peeperklip;
 use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 
-class CacheItemPool implements CacheItemPoolInterface
+class ArrayItemPool implements CacheItemPoolInterface
 {
     private array $container;
     private array $deferredContainer;
@@ -27,7 +27,7 @@ class CacheItemPool implements CacheItemPoolInterface
         return new CacheItem($key);
     }
 
-    public function getItems(array $keys = array())
+    public function getItems(array $keys = array()): array
     {
         array_walk($keys, function ($key) {
             $this->validateRequestedKey($key);
@@ -42,7 +42,7 @@ class CacheItemPool implements CacheItemPoolInterface
         return $return;
     }
 
-    public function hasItem($key)
+    public function hasItem($key): bool
     {
         return array_key_exists($key, $this->container);
     }
@@ -69,7 +69,7 @@ class CacheItemPool implements CacheItemPoolInterface
 
     public function saveDeferred(CacheItemInterface $item)
     {
-        $this->deferredContainer[] = [$item->getKey(), $this];
+        $this->deferredContainer[$item->getKey()] = $item;
     }
 
     public function commit()
@@ -81,14 +81,14 @@ class CacheItemPool implements CacheItemPoolInterface
         $this->deferredContainer = [];
     }
 
-    private function validateRequestedKey($value)
+    private function validateRequestedKey($value): void
     {
         if ($value !== 0 && empty($value)) {
-            throw new \InvalidArgumentException('Key should not contain empty values');
+            throw new InvalidArgumentException('Key should not contain empty values');
         }
 
-        if (in_array($value, ['boolean', 'array', 'object', 'resource'])) {
-            throw new \InvalidArgumentException('Keys should be scalar');
+        if (in_array(gettype($value), ['boolean', 'array', 'object', 'resource'])) {
+            throw new InvalidArgumentException('Keys should be scalar');
         }
     }
 }
