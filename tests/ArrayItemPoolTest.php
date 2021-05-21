@@ -5,7 +5,7 @@ use Peeperklip\ArrayItemPool;
 use Peeperklip\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
-class CacheItemPoolTest extends TestCase
+class ArrayItemPoolTest extends TestCase
 {
     private const NON_EXISTENT_KEY = 'thiskeydoesnotexist';
     private const THIS_KEY_EXISTS = 'iexist';
