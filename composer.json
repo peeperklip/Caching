@@ -2,12 +2,17 @@
     "require": {
         "psr/cache": "^1.0",
         "phpunit/phpunit": "^9.5",
-        "ext-redis": "*"
     },
     "autoload": {
         "psr-4": {
             "Peeperklip\\": "src"
         }
+    },
+    "suggest": {
+        "ext-redis": "To make use of the cache library using Redis"
+    },
+    "autoload-dev": {
+        "psr-4": {"Peeperklip\\Cache\\Tests\\": "tests" }
     },
     "name": "peeperklip/caching",
     "description": "My Caching library"

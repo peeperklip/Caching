@@ -1,5 +1,7 @@
 <?php
 
+namespace Peeperklip\Cache\Tests\Unit;
+
 use Peeperklip\CacheItem;
 use Peeperklip\ArrayItemPool;
 use Peeperklip\InvalidArgumentException;
