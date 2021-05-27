@@ -20,7 +20,7 @@ This repository comes with the (stripped) dockerfiles as seen in [peeperklip/Doc
 #### initial set up does not work on docker (this is WIP as well)
 ```shell
 git clone git@github.com:peeperklip/Caching.git
-php install
+php composer.phar install
 docker-compose up (-d)
 ```
 
