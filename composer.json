@@ -12,10 +12,7 @@
         "ext-redis": "To make use of the cache library using Redis"
     },
     "autoload-dev": {
-        "psr-4": {
-            "Peeperklip\\Cache\\Tests\\Unit\\": "tests\\Unit",
-            "Peeperklip\\Cache\\Tests\\Intergration\\": "tests\\Integration"
-        }
+        "psr-4": { "Peeperklip\\Cache\\Tests\\": "tests" }
     },
     "name": "peeperklip/caching",
     "description": "My Caching library"
