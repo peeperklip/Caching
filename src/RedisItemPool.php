@@ -15,22 +15,59 @@ final class RedisItemPool implements CacheItemPoolInterface
 
     private array $deferred;
 
-    public function __construct(string $host, int $port, $password)
+    private function __construct(?\Redis $redis = null, ?string $host = null, ?int $port = null, ?string $password = null)
     {
+        if ($redis instanceof \Redis) {
+            $this->redis = $redis;
+        }
+
+        if ($redis === null && ($password === null || $host === null || $port === null)) {
+            throw new \RuntimeException(sprintf("Can not instantiate %s", self::class));
+        }
+
+        if ($redis === null) {
+            $redis = new \Redis();
+
+            if (!$redis->connect($host, $port)) {
+                throw new \RuntimeException(sprintf("Can not instantiate %s. Could not connect to redis", self::class));
+            }
+
+            if (!$redis->auth($password)) {
+                throw new \RuntimeException(sprintf("Can not instantiate %s. Authentication to redis failed", self::class));
+            }
+
+            $this->redis = $redis;
+        }
+
         $this->deferred = [];
-        $redis = new \Redis();
-        $redis->connect($host, $port);
-        $redis->auth($password);
-        $this->redis = $redis;
+
+    }
+
+    public static function createFromCredentials(string $host, string $password, int $port): self
+    {
+        return new self(null, $host, $port, $password);
+    }
+
+    public static function createFromRedisObject(\Redis $redis): self
+    {
+        return new self($redis);
     }
 
     public function getItem($key)
     {
+        if (!$this->hasItem($key)) {
+            throw new InvalidArgumentException(sprintf('Requested key was never stored into cache: %s', $key));
+        }
+
         return $this->redis->get($key);
     }
 
     public function getItems(array $keys = array()): array
     {
+        $requestedKeys = array_values($keys);
+        if (array_diff(array_values($requestedKeys), $this->redis->keys('*')) !== []) {
+            throw new InvalidArgumentException(sprintf('(Some) requested key(s) ware never stored into cache: %s', implode($requestedKeys)));
+        }
         $items = [];
 
         array_walk($keys, function ($key) use (&$items) {
@@ -62,6 +99,8 @@ final class RedisItemPool implements CacheItemPoolInterface
 
     public function deleteItems(array $keys)
     {
+        // TODO validate the key
+        // Throw invalid argument exception if the value sucks
         array_walk($keys, function (string $items) {
             $this->redis->del($items);
         });
@@ -69,7 +108,7 @@ final class RedisItemPool implements CacheItemPoolInterface
 
     public function save(CacheItemInterface $item)
     {
-        $this->redis->set($item->getKey(), $item->get(), ['nx', 'ex' => self::DEFAULT_TTL]);
+        return $this->redis->set($item->getKey(), $item->get(), ['nx', 'ex' => self::DEFAULT_TTL]);
     }
 
     public function saveDeferred(CacheItemInterface $item)
@@ -79,10 +118,16 @@ final class RedisItemPool implements CacheItemPoolInterface
 
     public function commit()
     {
-        array_walk($this->deferred, function (CacheItemInterface $item) {
-            $this->save($item);
+        $failed = array_filter($this->deferred, function (CacheItemInterface $item) {
+            return $this->save($item);
         });
 
-        return $this->deferred = [];
+        if ($failed === []) {
+            $this->deferred = [];
+
+            return true;
+        }
+
+        return false;
     }
 }
