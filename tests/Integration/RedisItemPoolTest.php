@@ -2,6 +2,7 @@
 
 namespace Peeperklip\Cache\Tests\Integration;
 
+use Peeperklip\RedisItemPool;
 use PHPUnit\Framework\TestCase;
 
 class RedisItemPoolTest extends TestCase
@@ -11,9 +12,10 @@ class RedisItemPoolTest extends TestCase
         self::markTestSkipped();
     }
 
-    public function testObjectInstantiationTwo(): void
+    public function testCreateFromCredentialsWillReturnARedisItemPoolInstanceUsingCredentials(): void
     {
-        self::markTestSkipped();
+        $sut = RedisItemPool::createFromCredentials('qwwert', 'wqewqe', 100);
+        self::assertInstanceOf(RedisItemPool::class, $sut);
     }
 
     public function testObjectInstantiationOne(): void
