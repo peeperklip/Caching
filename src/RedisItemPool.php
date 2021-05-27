@@ -21,7 +21,7 @@ final class RedisItemPool implements CacheItemPoolInterface
             $this->redis = $redis;
         }
 
-        if ($redis === null && ($password === null || $host === null || $port === null)) {
+        if ($redis === null && ($host === null || $port === null)) {
             throw new \RuntimeException(sprintf("Can not instantiate %s", self::class));
         }
 
@@ -32,10 +32,9 @@ final class RedisItemPool implements CacheItemPoolInterface
                 throw new \RuntimeException(sprintf("Can not instantiate %s. Could not connect to redis", self::class));
             }
 
-            if (!$redis->auth($password)) {
+            if ($password !== null && !$redis->auth($password)) {
                 throw new \RuntimeException(sprintf("Can not instantiate %s. Authentication to redis failed", self::class));
             }
-
             $this->redis = $redis;
         }
 
@@ -43,7 +42,7 @@ final class RedisItemPool implements CacheItemPoolInterface
 
     }
 
-    public static function createFromCredentials(string $host, string $password, int $port): self
+    public static function createFromCredentials(string $host, int $port, string $password = null): self
     {
         return new self(null, $host, $port, $password);
     }

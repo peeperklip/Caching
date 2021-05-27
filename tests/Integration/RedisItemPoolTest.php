@@ -14,7 +14,7 @@ class RedisItemPoolTest extends TestCase
 
     public function testCreateFromCredentialsWillReturnARedisItemPoolInstanceUsingCredentials(): void
     {
-        $sut = RedisItemPool::createFromCredentials('qwwert', 'wqewqe', 100);
+        $sut = RedisItemPool::createFromCredentials('redis', 6379);
         self::assertInstanceOf(RedisItemPool::class, $sut);
     }
 
