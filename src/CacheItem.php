@@ -6,13 +6,16 @@ use Psr\Cache\CacheItemInterface;
 
 class CacheItem implements CacheItemInterface
 {
-    private $expiresAt;
+    private int $expiresAt;
     private $value;
     private string $key;
+    private bool $isset;
 
     public function __construct($id)
     {
         $this->key = $id;
+        $this->isset = false;
+        $this->expiresAt = 0;
     }
 
     public function getKey()
@@ -27,7 +30,7 @@ class CacheItem implements CacheItemInterface
 
     public function isHit()
     {
-        if (null === $this->value) {
+        if (!$this->isset) {
             return false;
         }
 
@@ -40,12 +43,23 @@ class CacheItem implements CacheItemInterface
 
     public function set($value)
     {
+        $this->isset = true;
         $this->value = $value;
     }
 
     public function expiresAt($expiration)
     {
-        $this->expiresAt = $expiration;
+        if (!$expiration instanceof \DateTimeInterface) {
+            throw new InvalidArgumentException(sprintf('%s needs to be an instance of %s', __METHOD__, \DateTimeImmutable::class));
+        }
+
+        $fff = ($expiration->getTimestamp() - (new \DateTimeImmutable())->getTimestamp());
+
+        if ($fff < 1) {
+            throw new InvalidArgumentException(sprintf('%s needs to be an instance of %s', __METHOD__, \DateTimeImmutable::class));
+        }
+
+        $this->expiresAfter($fff);
     }
 
     public function expiresAfter($time)
@@ -53,9 +67,14 @@ class CacheItem implements CacheItemInterface
         if (is_int($time)) {
             $this->expiresAt = time() + $time;
         } elseif($time instanceof \DateInterval) {
-            $this->expiresAt = $time->format('%s');
+            $this->expiresAt = $this->getExpirationTimeStampByDateTime($time);
         } elseif (null === $time) {
             $this->expiresAfter(300);
         }
+    }
+
+    private function getExpirationTimeStampByDateTime(\DateInterval $dateInterval):int
+    {
+        return $dateInterval->format('%s');
     }
 }
