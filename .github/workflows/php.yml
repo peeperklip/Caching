@@ -28,8 +28,6 @@ jobs:
 
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress
-    - name: Run test suite
-      run: composer run-script --dev unit-tests
 
     - name: Start containers
       run: docker-compose up -d --build
