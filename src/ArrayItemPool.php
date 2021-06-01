@@ -59,7 +59,10 @@ class ArrayItemPool implements CacheItemPoolInterface
 
     public function deleteItems(array $keys)
     {
-        array_walk($keys, 'deleteItem');
+        array_walk($keys, function (string $item) {
+            $this->validateRequestedKey($item);
+            $this->deleteItem($item);
+        });
     }
 
     public function save(CacheItemInterface $item)

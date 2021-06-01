@@ -76,6 +76,28 @@ class ArrayItemPoolTest extends TestCase
         self::assertContainsOnlyInstancesOf(CacheItem::class, $resultSet);
     }
 
+    public function testDeleteItemsWillRemoveItemsFromCachePoolTheCachePool(): void
+    {
+        $sut = new ArrayItemPool();
+
+        $ci0 = new CacheItem(self::THIS_KEY_EXISTS . '_0');
+        $ci1 = new CacheItem(self::THIS_KEY_EXISTS . '_1');
+
+        $sut->save($ci0);
+        $sut->save($ci1);
+
+        self::assertTrue($sut->hasItem(self::THIS_KEY_EXISTS . '_0'));
+        self::assertTrue($sut->hasItem(self::THIS_KEY_EXISTS . '_1'));
+
+        $sut->deleteItems([
+            self::THIS_KEY_EXISTS . '_0',
+            self::THIS_KEY_EXISTS . '_1'
+            ]);
+
+        self::assertFalse($sut->hasItem(self::THIS_KEY_EXISTS . '_0'));
+        self::assertFalse($sut->hasItem(self::THIS_KEY_EXISTS . '_1'));
+    }
+
     public function testGetItemFirstReturnsTheRequestedObjectFromCacheThenReturnsAMissedItemAfterItsRemovedFromCache(): void
     {
         $sut = new ArrayItemPool();
@@ -121,5 +143,23 @@ class ArrayItemPoolTest extends TestCase
         self::assertSame(1234, $ci->get());
         self::assertTrue($ci->isHit());
     }
-    /** @TODO testing the TTL in more detail */
+
+    public function testClearClearsOutTheCachePool()
+    {
+        $sut = new ArrayItemPool();
+
+        $ci0 = new CacheItem(self::THIS_KEY_EXISTS . '_0');
+        $ci1 = new CacheItem(self::THIS_KEY_EXISTS . '_1');
+
+        $sut->save($ci0);
+        $sut->save($ci1);
+
+        self::assertTrue($sut->hasItem(self::THIS_KEY_EXISTS . '_0'));
+        self::assertTrue($sut->hasItem(self::THIS_KEY_EXISTS . '_1'));
+
+        $sut->clear();
+
+        self::assertFalse($sut->hasItem(self::THIS_KEY_EXISTS . '_0'));
+        self::assertFalse($sut->hasItem(self::THIS_KEY_EXISTS . '_1'));
+    }
 }
