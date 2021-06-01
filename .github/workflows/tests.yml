@@ -29,10 +29,10 @@ jobs:
         run: docker-compose up -d --build
 
       - name: Run integration tests
-        run: docker-compose exec php vendor/bin/phpunit -c tests/phpunit.xml --testsuite integration --do-not-cache-result
+        run: docker-compose exec -T php vendor/bin/phpunit -c tests/phpunit.xml --testsuite integration --do-not-cache-result
       
       - name: Run unit tests
-        run: docker-compose exec php vendor/bin/phpunit -c tests/phpunit.xml --testsuite unit --do-not-cache-result
+        run: docker-compose exec -T php vendor/bin/phpunit -c tests/phpunit.xml --testsuite unit --do-not-cache-result
 
       - name: Stop containers
         if: always()
