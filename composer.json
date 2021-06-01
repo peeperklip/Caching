@@ -15,5 +15,6 @@
         "psr-4": { "Peeperklip\\Cache\\Tests\\": "tests" }
     },
     "name": "peeperklip/caching",
-    "description": "My Caching library"
+    "description": "My Caching library",
+    "license": "MIT"
 }
