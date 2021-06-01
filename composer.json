@@ -11,6 +11,10 @@
     "suggest": {
         "ext-redis": "To make use of the cache library using Redis"
     },
+    "scripts": {
+        "unit-tests": "php vendor/bin/phpunit -c tests/phpunit.xml --testsuite unit --do-not-cache-result",
+        "unit-integration": "php vendor/bin/phpunit -c tests/phpunit.xml --testsuite integration --do-not-cache-result"
+    },
     "autoload-dev": {
         "psr-4": { "Peeperklip\\Cache\\Tests\\": "tests" }
     },
