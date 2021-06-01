@@ -28,6 +28,9 @@ jobs:
       - name: Start containers
         run: docker-compose up -d --build
 
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
       - name: Run integration tests
         run: docker-compose exec -T php vendor/bin/phpunit -c tests/phpunit.xml --testsuite integration --do-not-cache-result
       
