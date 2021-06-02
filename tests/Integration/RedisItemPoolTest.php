@@ -29,6 +29,30 @@ class RedisItemPoolTest extends TestCase
         self::assertInstanceOf(RedisItemPool::class, $sut);
     }
 
+    public function testCallingClearWillEmptyOutCachePool()
+    {
+        $sut = $this->createSut();
+        $sut->save(new CacheItem('my_key'));
+        self::assertTrue($sut->hasItem('my_key'));
+        $sut->clear();
+        self::assertFalse($sut->hasItem('my_key'));
+    }
+
+    public function testDeleteWillDeleteSpecifiedCacheItem()
+    {
+        $sut = $this->createSut();
+        $sut->save(new CacheItem('im_not_here'));
+        self::assertTrue($sut->hasItem('im_not_here'));
+        $sut->deleteItem('im_not_here');
+        self::assertFalse($sut->hasItem('im_not_here'));
+    }
+
+    public function testDeleteWillNotCauseAnyProblemsWhenTryingToDeleteAnItemThatDoesNotExist()
+    {
+        $sut = $this->createSut();
+        self::assertNull($sut->deleteItem('im_not_here'));
+    }
+
     public function testSaveStoresANewCacheItem(): void
     {
         $sut = $this->createSut();
