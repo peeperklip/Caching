@@ -107,7 +107,7 @@ final class RedisItemPool implements CacheItemPoolInterface
 
     public function save(CacheItemInterface $item)
     {
-        return $this->redis->set($item->getKey(), $item->get(), ['nx', 'ex' => self::DEFAULT_TTL]);
+        return $this->redis->set($item->getKey(), $item, ['nx', 'ex' => self::DEFAULT_TTL]);
     }
 
     public function saveDeferred(CacheItemInterface $item)

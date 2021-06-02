@@ -9,11 +9,6 @@ use PHPUnit\Framework\TestCase;
 
 class RedisItemPoolTest extends TestCase
 {
-    public function testJustAnEmptyTest(): void
-    {
-        self::markTestSkipped();
-    }
-
     public function testCreateFromCredentialsWillReturnARedisItemPoolInstanceUsingCredentials(): void
     {
         $sut = RedisItemPool::createFromCredentials('redis', 6379);
@@ -71,14 +66,27 @@ class RedisItemPoolTest extends TestCase
         self::assertTrue($sut->hasItem('my_cache_item'));
     }
 
-    public function testKeysStoredImmediatelyWillNotConflictWithDeferredItems(): void
+    public function testSaveDeferred(): void
     {
-        self::markTestSkipped();
-    }
+        self::markTestSkipped('the save method does not work as expected');
+        $sut = $this->createSut();
 
-    public function testKeysStoredDeferredWillNotConflictWithItemsStoredImmediately(): void
-    {
-        self::markTestSkipped();
+        $CI = new CacheItem('i_will_be_replaced');
+        $CI->set('my_value_will_be_replaced');
+        $sut->save($CI);
+
+        $cashedItem = $sut->getItem('i_will_be_replaced');
+
+        self::assertSame('i_will_be_replaced', $cashedItem->get());
+
+        $sut->saveDeferred((new CacheItem('i_will_be_replaced'))->set('my_value_is_replaced_by_now'));
+
+        $cashedItem = $sut->getItem('i_will_be_replaced');
+        self::assertSame('my_value_will_be_replaced', $cashedItem->get());
+
+        $sut->commit();
+
+        self::assertSame('my_value_is_replaced_by_now', $cashedItem->get());
     }
 
     public function testGetItemWillTrowExceptionIfTheKeyIsNotSet(): void
@@ -93,11 +101,6 @@ class RedisItemPoolTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('(Some) requested key(s) ware never stored into cache: im_not_here, neither_am_i');
         $this->createSut()->getItems(['im_not_here', 'neither_am_i']);
-    }
-
-    public function testGetItemWillReturnACacheItemIfTheKeyExists(): void
-    {
-        self::markTestSkipped();
     }
 
     private function createSut() : RedisItemPool
