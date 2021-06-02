@@ -52,12 +52,10 @@ final class RedisItemPool implements CacheItemPoolInterface
         return new self($redis);
     }
 
-    /**
-     * @throws \Psr\Cache\InvalidArgumentException
-     * @throws \JsonException
-     */
     public function getItem($key)
     {
+        $this->validateKey($key);
+
         if (!$this->hasItem($key)) {
             return new CacheItem($key);
         }
@@ -82,7 +80,7 @@ final class RedisItemPool implements CacheItemPoolInterface
         $items = [];
 
         array_walk($keys, function ($key) use (&$items) {
-            $items[] =  $this->redis->get($key);
+            $items[] =  $this->getItem($key);
         });
 
         return $items;
@@ -90,6 +88,7 @@ final class RedisItemPool implements CacheItemPoolInterface
 
     public function hasItem($key)
     {
+        $this->validateKey($key);
         return 1 === $this->redis->exists($key);
     }
 
@@ -101,6 +100,7 @@ final class RedisItemPool implements CacheItemPoolInterface
 
     public function deleteItem($key)
     {
+        $this->validateKey($key);
         if (!$this->hasItem($key)) {
             return;
         }
@@ -110,23 +110,25 @@ final class RedisItemPool implements CacheItemPoolInterface
 
     public function deleteItems(array $keys)
     {
-        // TODO validate the key
-        // Throw invalid argument exception if the value sucks
-        array_walk($keys, function (string $items) {
-            $this->redis->del($items);
+        array_walk($keys, function (string $key) {
+            $this->deleteItem($key);
         });
     }
 
     public function save(CacheItemInterface $item)
     {
-        if ($this->hasItem($item->getKey())) {
-            $this->deleteItem($item->getKey());
+        $key = $item->getKey();
+        $this->validateKey($key);
+
+        if ($this->hasItem($key)) {
+            $this->deleteItem($key);
         }
-        return $this->redis->set($item->getKey(), json_encode($item), ['nx', 'ex' => self::DEFAULT_TTL]);
+        return $this->redis->set($key, json_encode($item), ['nx', 'ex' => self::DEFAULT_TTL]);
     }
 
     public function saveDeferred(CacheItemInterface $item)
     {
+        $this->validateKey($item->getKey());
         $this->deferred[$item->getKey()] = $item;
     }
 
@@ -143,5 +145,12 @@ final class RedisItemPool implements CacheItemPoolInterface
         }
 
         return false;
+    }
+
+    private function validateKey($key)
+    {
+        if (!is_scalar($key) || is_bool($key)) {
+            throw new InvalidArgumentException(sprintf('Invalid key. Scalar value was expected, instead got %s', gettype($key)));
+        }
     }
 }

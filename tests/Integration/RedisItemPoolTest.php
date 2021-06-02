@@ -96,6 +96,29 @@ class RedisItemPoolTest extends TestCase
         $this->createSut()->getItems(['im_not_here', 'neither_am_i']);
     }
 
+    /**
+     * @dataProvider provideInvalidCacheKeys
+     */
+    public function testGetItemWillTrowExceptionIfTheKeyIsNotSet($invalidCacheKey, $ofType)
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $expectedMessage = "Invalid key. Scalar value was expected, instead got {$ofType}";
+        $this->expectExceptionMessage($expectedMessage);
+
+        $this->createSut()->getItem($invalidCacheKey);
+    }
+
+    public function provideInvalidCacheKeys()
+    {
+        return [
+            [null, 'NULL'],
+            [new class {}, 'object'],
+            [[], 'array'],
+            [true, 'boolean'],
+        ];
+    }
+
     private function createSut() : RedisItemPool
     {
         $redisItemPool = RedisItemPool::createFromCredentials('redis', 6379);
