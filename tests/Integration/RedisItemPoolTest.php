@@ -2,6 +2,8 @@
 
 namespace Peeperklip\Cache\Tests\Integration;
 
+use Peeperklip\CacheItem;
+use Peeperklip\InvalidArgumentException;
 use Peeperklip\RedisItemPool;
 use PHPUnit\Framework\TestCase;
 
@@ -18,19 +20,31 @@ class RedisItemPoolTest extends TestCase
         self::assertInstanceOf(RedisItemPool::class, $sut);
     }
 
-    public function testObjectInstantiationOne(): void
+    public function testObjectInstantiationWithPlainRedisObject(): void
     {
-        self::markTestSkipped();
+        $redis = new \Redis();
+        $redis->connect('redis');
+        $sut = RedisItemPool::createFromRedisObject($redis);
+
+        self::assertInstanceOf(RedisItemPool::class, $sut);
     }
 
     public function testSaveStoresANewCacheItem(): void
     {
-        self::markTestSkipped();
+        $sut = $this->createSut();
+        self::assertFalse($sut->hasItem('my_cache_item'));
+        $sut->save(new CacheItem('my_cache_item'));
+        self::assertTrue($sut->hasItem('my_cache_item'));
     }
 
     public function testSaveDeferredWillNotDirectlyStoreIntoCacheBeforeTheCommitMethodIsCalled(): void
     {
-        self::markTestSkipped();
+        $sut = $this->createSut();
+        self::assertFalse($sut->hasItem('my_cache_item'));
+        $sut->saveDeferred(new CacheItem('my_cache_item'));
+        self::assertFalse($sut->hasItem('my_cache_item'));
+        $sut->commit();
+        self::assertTrue($sut->hasItem('my_cache_item'));
     }
 
     public function testKeysStoredImmediatelyWillNotConflictWithDeferredItems(): void
@@ -45,7 +59,16 @@ class RedisItemPoolTest extends TestCase
 
     public function testGetItemWillTrowExceptionIfTheKeyIsNotSet(): void
     {
-        self::markTestSkipped();
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Requested key was never stored into cache: im_not_here');
+        $this->createSut()->getItem('im_not_here');
+    }
+
+    public function testGetItemsWillTrowExceptionIfTheKeyIsNotSet(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('(Some) requested key(s) ware never stored into cache: im_not_here, neither_am_i');
+        $this->createSut()->getItems(['im_not_here', 'neither_am_i']);
     }
 
     public function testGetItemWillReturnACacheItemIfTheKeyExists(): void
@@ -53,8 +76,11 @@ class RedisItemPoolTest extends TestCase
         self::markTestSkipped();
     }
 
-    public function testCommitWillSaveTheDeferredItems(): void
+    private function createSut() : RedisItemPool
     {
-        self::markTestSkipped();
+        $redisItemPool = RedisItemPool::createFromCredentials('redis', 6379);
+        $redisItemPool->clear();
+
+        return $redisItemPool;
     }
 }

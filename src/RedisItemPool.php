@@ -65,7 +65,7 @@ final class RedisItemPool implements CacheItemPoolInterface
     {
         $requestedKeys = array_values($keys);
         if (array_diff(array_values($requestedKeys), $this->redis->keys('*')) !== []) {
-            throw new InvalidArgumentException(sprintf('(Some) requested key(s) ware never stored into cache: %s', implode($requestedKeys)));
+            throw new InvalidArgumentException(sprintf('(Some) requested key(s) ware never stored into cache: %s', implode(', ', $requestedKeys)));
         }
         $items = [];
 
@@ -78,7 +78,7 @@ final class RedisItemPool implements CacheItemPoolInterface
 
     public function hasItem($key)
     {
-        return $this->redis->exists($key);
+        return 1 === $this->redis->exists($key);
     }
 
     public function clear()
