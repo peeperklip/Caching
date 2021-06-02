@@ -4,7 +4,7 @@ namespace Peeperklip;
 
 use Psr\Cache\CacheItemInterface;
 
-class CacheItem implements CacheItemInterface
+class CacheItem implements CacheItemInterface, \JsonSerializable
 {
     private int $expiresAt;
     private $value;
@@ -76,5 +76,10 @@ class CacheItem implements CacheItemInterface
     private function getExpirationTimeStampByDateTime(\DateInterval $dateInterval):int
     {
         return $dateInterval->format('%s');
+    }
+
+    public function jsonSerialize()
+    {
+        return get_object_vars($this);
     }
 }

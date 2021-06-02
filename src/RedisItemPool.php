@@ -52,13 +52,25 @@ final class RedisItemPool implements CacheItemPoolInterface
         return new self($redis);
     }
 
+    /**
+     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws \JsonException
+     */
     public function getItem($key)
     {
         if (!$this->hasItem($key)) {
-            throw new InvalidArgumentException(sprintf('Requested key was never stored into cache: %s', $key));
+            return new CacheItem($key);
         }
 
-        return $this->redis->get($key);
+        //Not sure if it is a problem if you do not get the same instance you stored. The values in the object are the same
+
+        $storedData = json_decode($this->redis->get($key), true, 512, JSON_THROW_ON_ERROR);
+
+        $ci = new CacheItem($key);
+        $ci->set($storedData['value']);
+        $ci->expiresAfter($storedData['expiresAt']);
+
+        return $ci;
     }
 
     public function getItems(array $keys = array()): array
@@ -107,7 +119,10 @@ final class RedisItemPool implements CacheItemPoolInterface
 
     public function save(CacheItemInterface $item)
     {
-        return $this->redis->set($item->getKey(), $item, ['nx', 'ex' => self::DEFAULT_TTL]);
+        if ($this->hasItem($item->getKey())) {
+            $this->deleteItem($item->getKey());
+        }
+        return $this->redis->set($item->getKey(), json_encode($item), ['nx', 'ex' => self::DEFAULT_TTL]);
     }
 
     public function saveDeferred(CacheItemInterface $item)
@@ -118,7 +133,7 @@ final class RedisItemPool implements CacheItemPoolInterface
     public function commit()
     {
         $failed = array_filter($this->deferred, function (CacheItemInterface $item) {
-            return $this->save($item);
+            return !$this->save($item);
         });
 
         if ($failed === []) {

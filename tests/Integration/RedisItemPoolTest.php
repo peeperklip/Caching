@@ -68,7 +68,6 @@ class RedisItemPoolTest extends TestCase
 
     public function testSaveDeferred(): void
     {
-        self::markTestSkipped('the save method does not work as expected');
         $sut = $this->createSut();
 
         $CI = new CacheItem('i_will_be_replaced');
@@ -77,23 +76,17 @@ class RedisItemPoolTest extends TestCase
 
         $cashedItem = $sut->getItem('i_will_be_replaced');
 
-        self::assertSame('i_will_be_replaced', $cashedItem->get());
-
-        $sut->saveDeferred((new CacheItem('i_will_be_replaced'))->set('my_value_is_replaced_by_now'));
-
-        $cashedItem = $sut->getItem('i_will_be_replaced');
         self::assertSame('my_value_will_be_replaced', $cashedItem->get());
 
-        $sut->commit();
+        $DCI = new CacheItem('i_will_be_replaced');
+        $DCI->set('my_value_is_replaced_by_now');
+        $sut->saveDeferred($DCI);
 
-        self::assertSame('my_value_is_replaced_by_now', $cashedItem->get());
-    }
+        self::assertSame('my_value_will_be_replaced', $sut->getItem('i_will_be_replaced')->get());
 
-    public function testGetItemWillTrowExceptionIfTheKeyIsNotSet(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Requested key was never stored into cache: im_not_here');
-        $this->createSut()->getItem('im_not_here');
+        self::assertTrue($sut->commit());
+
+        self::assertSame('my_value_is_replaced_by_now', $sut->getItem('i_will_be_replaced')->get());
     }
 
     public function testGetItemsWillTrowExceptionIfTheKeyIsNotSet(): void
