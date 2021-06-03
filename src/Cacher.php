@@ -26,7 +26,7 @@ class Cacher
 
         $cacheItem = new CacheItem($key);
         $returnValue = $callable();
-        if (!is_string($returnValue)) {
+        if (!is_scalar($returnValue)) {
             throw new \InvalidArgumentException("callable did not respond with a string");
         }
 
