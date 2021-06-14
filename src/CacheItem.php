@@ -53,13 +53,13 @@ class CacheItem implements CacheItemInterface, \JsonSerializable
             throw new InvalidArgumentException(sprintf('%s needs to be an instance of %s', __METHOD__, \DateTimeImmutable::class));
         }
 
-        $fff = ($expiration->getTimestamp() - (new \DateTimeImmutable())->getTimestamp());
+        $timeDifferenceInSeconds = ($expiration->getTimestamp() - (new \DateTimeImmutable())->getTimestamp());
 
-        if ($fff < 1) {
+        if ($timeDifferenceInSeconds < 1) {
             throw new InvalidArgumentException(sprintf('%s needs to be an instance of %s', __METHOD__, \DateTimeImmutable::class));
         }
 
-        $this->expiresAfter($fff);
+        $this->expiresAfter($timeDifferenceInSeconds);
     }
 
     public function expiresAfter($time)
