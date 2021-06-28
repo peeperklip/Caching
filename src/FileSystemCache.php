@@ -14,7 +14,7 @@ final class FileSystemCache implements CacheItemPoolInterface
     public function __construct(string $varDir)
     {
         if (!is_dir($varDir)) {
-             throw new \Peeperklip\InvalidArgumentException('not a valid dir');
+             throw new InvalidArgumentException('Not a valid dir');
         }
 
         $this->varDir = $varDir;
@@ -57,7 +57,7 @@ final class FileSystemCache implements CacheItemPoolInterface
             return false;
         }
 
-        if (is_dir($key)) {
+        if (is_dir($this->getFileName($key))) {
             return false;
         }
 
@@ -84,12 +84,12 @@ final class FileSystemCache implements CacheItemPoolInterface
 
     public function saveDeferred(CacheItemInterface $item)
     {
-        // TODO: Implement saveDeferred() method.
+        throw new CacheException(__METHOD__ . "Not implemented yet");
     }
 
     public function commit()
     {
-        // TODO: Implement commit() method.
+        throw new CacheException(__METHOD__ . "Not implemented yet");
     }
 
     private function getFileName($path)
