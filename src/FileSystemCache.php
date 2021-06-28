@@ -22,17 +22,23 @@ final class FileSystemCache implements CacheItemPoolInterface
 
     public function getItem($key)
     {
+        $result = null;
+
         if ($this->hasItem($this->getFileName($key))) {
-            //exitsts
+            $result = file_get_contents($this->getFileName($key));
         }
 
-        // does not exist
+        return new CacheItem($result);
     }
 
     public function getItems(array $keys = array())
     {
+        $result = [];
+        array_walk($keys, function (string $key) use (&$result){
+            $result[] = $this->getItem($key);
+        });
 
-        // TODO: Implement getItems() method.
+        return $result;
     }
 
     public function hasItem($key)
@@ -71,11 +77,7 @@ final class FileSystemCache implements CacheItemPoolInterface
 
     public function save(CacheItemInterface $item)
     {
-        if (base64_encode(base64_decode($item->get(), true)) !== $item->get()) {
-            return false;
-        }
-
-        // write file
+        file_put_contents($this->getFileName($item->getKey()), $item->get());
 
         return true;
     }
