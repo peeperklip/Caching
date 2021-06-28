@@ -71,6 +71,8 @@ class CacheItem implements CacheItemInterface, \JsonSerializable
         } elseif (null === $time) {
             $this->expiresAfter(300);
         }
+
+        throw new InvalidArgumentException(sprintf("Invalid parameter `time` must be numeric, null or an instance of \DateInterval"));
     }
 
     private function getExpirationTimeStampByDateTime(\DateInterval $dateInterval):int
