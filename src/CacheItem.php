@@ -66,10 +66,17 @@ class CacheItem implements CacheItemInterface, \JsonSerializable
     {
         if (is_int($time)) {
             $this->expiresAt = time() + $time;
-        } elseif($time instanceof \DateInterval) {
+            return;
+        }
+
+        if ($time instanceof \DateInterval) {
             $this->expiresAt = $this->getExpirationTimeStampByDateTime($time);
-        } elseif (null === $time) {
+            return;
+        }
+
+        if (null === $time) {
             $this->expiresAfter(300);
+            return;
         }
 
         throw new InvalidArgumentException(sprintf("Invalid parameter `time` must be numeric, null or an instance of \DateInterval"));

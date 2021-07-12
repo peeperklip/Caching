@@ -28,7 +28,10 @@ final class FileSystemCache implements CacheItemPoolInterface
             $result = file_get_contents($this->getFileName($key));
         }
 
-        return new CacheItem($result);
+        $return = new CacheItem($key);
+        $return->set($result);
+
+        return $return;
     }
 
     public function getItems(array $keys = array())
@@ -43,7 +46,7 @@ final class FileSystemCache implements CacheItemPoolInterface
 
     public function hasItem($key)
     {
-        return (!file_exists($this->getFileName($key)));
+        return file_exists($this->getFileName($key));
     }
 
     public function clear()
