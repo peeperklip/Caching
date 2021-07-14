@@ -14,7 +14,9 @@ final class FileSystemCache implements CacheItemPoolInterface
     public function __construct(string $varDir)
     {
         if (!is_dir($varDir)) {
-             throw new InvalidArgumentException('Not a valid dir');
+            if (!mkdir($varDir)) {
+                throw new \RuntimeException(sprintf('Directory "%s" was not created', $varDir));
+            }
         }
 
         $this->varDir = $varDir;
@@ -22,16 +24,16 @@ final class FileSystemCache implements CacheItemPoolInterface
 
     public function getItem($key)
     {
-        $result = null;
-
-        if ($this->hasItem($this->getFileName($key))) {
-            $result = file_get_contents($this->getFileName($key));
+        if (!$this->hasItem($key)) {
+            return new CacheItem($key);
         }
+        $storedData = json_decode(file_get_contents($this->getFileName($key)), true, 512, JSON_THROW_ON_ERROR);
 
-        $return = new CacheItem($key);
-        $return->set($result);
+        $ci = new CacheItem($key);
+        $ci->set($storedData['value']);
+        $ci->expiresAfter($storedData['expiresAt']);
 
-        return $return;
+        return $ci;
     }
 
     public function getItems(array $keys = array())
@@ -51,7 +53,14 @@ final class FileSystemCache implements CacheItemPoolInterface
 
     public function clear()
     {
-        unlink($this->varDir);
+        foreach (scandir($this->varDir) as $item) {
+            $varDir = $this->varDir . DIRECTORY_SEPARATOR;
+            if (in_array($item, ['.', '..'])) {
+                return;
+            }
+
+            unlink($varDir . $item);
+        }
     }
 
     public function deleteItem($key)
@@ -80,7 +89,7 @@ final class FileSystemCache implements CacheItemPoolInterface
 
     public function save(CacheItemInterface $item)
     {
-        file_put_contents($this->getFileName($item->getKey()), $item->get());
+        file_put_contents($this->getFileName($item->getKey()), json_encode($item));
 
         return true;
     }
@@ -95,7 +104,7 @@ final class FileSystemCache implements CacheItemPoolInterface
         throw new CacheException(__METHOD__ . "Not implemented yet");
     }
 
-    private function getFileName($path)
+    private function getFileName(string $path)
     {
         return $this->varDir . DIRECTORY_SEPARATOR . $path;
     }

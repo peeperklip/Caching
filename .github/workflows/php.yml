@@ -35,6 +35,10 @@ jobs:
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress
 
+    - name: Prepare filesystem for integration test
+    - run: |
+        chown -R $(docker-compose exec -T php id -u) ./tests/Integration/var/
+
     - name: Run integration tests
       run: docker-compose exec -T php vendor/bin/phpunit -c tests/phpunit.xml --testsuite integration --do-not-cache-result
 
