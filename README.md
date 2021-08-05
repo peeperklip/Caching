@@ -23,12 +23,3 @@ git clone git@github.com:peeperklip/Caching.git
 php composer.phar install
 docker-compose up (-d)
 ```
-
-### Running the tests
-```shell
-# integration tests
-docker-compose exec php vendor/bin/phpunit -c tests/phpunit.xml --testsuite integration
-
-# unit tests
-docker-compose exec php vendor/bin/phpunit -c tests/phpunit.xml --testsuite unit
-```
